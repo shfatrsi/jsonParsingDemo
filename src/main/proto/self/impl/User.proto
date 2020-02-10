@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package self.impl;
+option java_package = "org.self.impl";
+option java_multiple_files = true;
+
+message User {
+    bool status = 1;
+    int32 code = 2;
+    string message = 3;
+}

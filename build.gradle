@@ -1,0 +1,54 @@
+plugins {
+    id 'java'
+    id 'com.google.protobuf' version '0.8.10'
+}
+
+group 'org.self'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.11
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    annotationProcessor "org.projectlombok:lombok:1.18.8"
+    testAnnotationProcessor "org.projectlombok:lombok:1.18.8"
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile "org.assertj:assertj-core:3.11.1"
+
+    implementation "org.projectlombok:lombok:1.18.8"
+    implementation "com.google.guava:guava:23.0"
+    implementation "com.google.protobuf:protobuf-java:3.11.1"
+    implementation ("com.google.protobuf:protobuf-java-util:3.11.1") {
+        exclude group: 'com.google.guava', module: 'guava'
+    }
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.10.1"
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.11.1"
+    }
+
+    generateProtoTasks.generatedFilesBaseDir = 'generated-sources'
+
+    generateProtoTasks {
+        all().each {task ->
+        }
+        ofSourceSet('main')
+    }
+}
+
+sourceSets {
+    main {
+        proto {
+            srcDir 'src/main/proto'
+        }
+        java {
+            srcDirs 'src/main/java', 'generated-sources/main/java'
+        }
+    }
+}
