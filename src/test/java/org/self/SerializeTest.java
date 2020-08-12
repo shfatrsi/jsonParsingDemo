@@ -17,85 +17,87 @@ import java.io.ByteArrayOutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public final class SerializeTest {
+public final class SerializeTest
+{
     @Test
-    public void protoSerialize() throws Exception {
-        serialize(new SerializeProto.Builder<TestExample>()
-                        .printer(JsonFormat.printer()
-                                .omittingInsignificantWhitespace()
-                                .includingDefaultValueFields())
-                        .function(testExample -> User.newBuilder()
-                                .setMessage(testExample.getMessage())
-                                .setCode(testExample.getCode())
-                                .setStatus(testExample.isStatus())
-                                .build())
-                        .build(),
-                new ByteArrayOutputStream(),
-                new DeserializeProto.Builder<TestExample, User.Builder>()
-                        .parser(JsonFormat.parser()
-                                .ignoringUnknownFields())
-                        .supplier(User::newBuilder)
-                        .function(user -> TestExample.builder()
-                                .status(user.getStatus())
-                                .code(user.getCode())
-                                .message(user.getMessage())
-                                .build())
-                        .build());
-//                new DeserializeProto<>(
-//                        JsonFormat.parser()
-//                                .ignoringUnknownFields(),
-//                        User::newBuilder,
-//                        user -> TestExample.builder()
-//                                .status(user.getStatus())
-//                                .code(user.getCode())
-//                                .message(user.getMessage())
-//                                .build()));
-    }
-
-    @Test
-    public void jacksonSerialize() throws Exception {
-        final ObjectMapper objectMapper = new ObjectMapper()
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        serialize(new SerializeJackson.Builder<TestExample>()
-                        .objectMapper(objectMapper)
-                        .build(),
-                new ByteArrayOutputStream(),
-                new DeserializeJackson.Builder<TestExample>()
-                        .objectMapper(objectMapper)
-                        .classType(TestExample.class)
-                        .build());
-//        new DeserializeJackson<>(objectMapper, TestExample.class));
-//        serialize(new SerializeJackson<>(objectMapper),
-//                new ByteArrayOutputStream(),
-//                new DeserializeJackson<>(objectMapper, TestExample.class));
-    }
-
-    private void serialize(
-            final JsonSerialize<TestExample> serializer,
-            final ByteArrayOutputStream stream,
-            final JsonDeserialize<TestExample> deserializer) throws Exception {
-        serializer.serialize(stream, TestExample.builder()
+    public void protoSerializeJacksonClass() throws Exception
+    {
+        final TestExample roundTripped = roundTrip(
+            SerializeProto.create(
+                JsonFormat.printer()
+                    .omittingInsignificantWhitespace()
+                    .includingDefaultValueFields(),
+                testExample -> User.newBuilder()
+                    .setMessage(testExample.getMessage())
+                    .setCode(testExample.getCode())
+                    .setStatus(testExample.isStatus())
+                    .build()),
+            DeserializeProto.create(
+                JsonFormat.parser()
+                    .ignoringUnknownFields(),
+                User::newBuilder,
+                user -> TestExample.builder()
+                    .status(user.getStatus())
+                    .code(user.getCode())
+                    .message(user.getMessage())
+                    .build()),
+            TestExample.builder()
                 .message("hiya")
                 .status(true)
                 .code(23)
                 .build());
 
+        assertThat(roundTripped).isEqualTo(
+            TestExample.builder()
+                .message("hiya")
+                .status(true)
+                .code(23)
+                .build());
+    }
+
+    @Test
+    public void jacksonSerializeJacksonClass() throws Exception
+    {
+        final ObjectMapper objectMapper = new ObjectMapper()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+
+        final TestExample roundTripped = roundTrip(
+            SerializeJackson.create(objectMapper),
+            DeserializeJackson.create(objectMapper, TestExample.class),
+            TestExample.builder()
+                .message("hiya")
+                .status(true)
+                .code(23)
+                .build());
+
+        assertThat(roundTripped).isEqualTo(
+            TestExample.builder()
+                .message("hiya")
+                .status(true)
+                .code(23)
+                .build());
+    }
+
+    private <T> T roundTrip(
+        final JsonSerialize<T> serializer,
+        final JsonDeserialize<T> deserializer,
+        final T o) throws Exception
+    {
+        final ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+        serializer.serialize(stream, o);
+
         final ByteArrayInputStream inputStream = new ByteArrayInputStream(stream.toByteArray());
-        final TestExample roundTripped = deserializer.deserialize(inputStream);
-
-        assertThat(roundTripped)
-                .isEqualTo(TestExample.builder()
-                        .message("hiya")
-                        .code(23)
-                        .status(true)
-                        .build());
+        return deserializer.deserialize(inputStream);
     }
 
     @Test
-    public void protoSerializeException() {
+    public void protoSerializeException()
+    {
     }
 
     @Test
-    public void jacksonSerializeException() {
+    public void jacksonSerializeException()
+    {
     }
 }

@@ -8,12 +8,14 @@ import lombok.Value;
 @JsonDeserialize(builder = TestExample.TestExampleBuilder.class)
 @Builder(toBuilder = true)
 @Value
-public class TestExample {
+public class TestExample
+{
     String message;
     int code;
     boolean status;
 
     @JsonPOJOBuilder(withPrefix = "")
-    public static final class TestExampleBuilder {
+    public static final class TestExampleBuilder
+    {
     }
 }

@@ -1,4 +1,5 @@
 package org.self;
 
-public class AppTest {
+public class AppTest
+{
 }
